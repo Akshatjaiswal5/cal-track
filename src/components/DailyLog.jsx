@@ -8,10 +8,9 @@ const MEAL_META = {
   dinner: { label: 'Dinner', icon: '🌙', bg: 'bg-indigo-50' },
 }
 
-const CAL_GOAL = 2200
-const PROTEIN_GOAL = 150
-
-export default function DailyLog() {
+export default function DailyLog({ goals = { calories: 2200, protein: 150 } }) {
+  const CAL_GOAL = goals.calories
+  const PROTEIN_GOAL = goals.protein
   const [logs, setLogs] = useState([])
   const [showAdd, setShowAdd] = useState(false)
   const [loading, setLoading] = useState(true)

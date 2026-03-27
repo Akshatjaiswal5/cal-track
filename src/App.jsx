@@ -2,6 +2,8 @@ import { useState } from 'react'
 import DailyLog from './components/DailyLog'
 import FoodManager from './components/FoodManager'
 import WeeklyStats from './components/WeeklyStats'
+import GoalsModal from './components/GoalsModal'
+import { useGoals } from './hooks/useGoals'
 
 const tabs = [
   { id: 'today', label: 'Today', icon: '🍽️' },
@@ -11,22 +13,33 @@ const tabs = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('today')
+  const [showGoals, setShowGoals] = useState(false)
+  const { goals, saveGoals } = useGoals()
 
   return (
     <div className="flex flex-col min-h-svh bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-sm">
-          <span className="text-white text-sm">🥗</span>
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-sm">
+            <span className="text-white text-sm">🥗</span>
+          </div>
+          <h1 className="text-lg font-bold text-gray-900 tracking-tight">CalTrack</h1>
         </div>
-        <h1 className="text-lg font-bold text-gray-900 tracking-tight">CalTrack</h1>
+        <button
+          onClick={() => setShowGoals(true)}
+          className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500"
+          title="Set goals"
+        >
+          🎯
+        </button>
       </header>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
-        {activeTab === 'today' && <DailyLog />}
+        {activeTab === 'today' && <DailyLog goals={goals} />}
         {activeTab === 'foods' && <FoodManager />}
-        {activeTab === 'week' && <WeeklyStats />}
+        {activeTab === 'week' && <WeeklyStats goals={goals} />}
       </main>
 
       {/* Bottom Nav */}
@@ -47,6 +60,14 @@ export default function App() {
           </button>
         ))}
       </nav>
+
+      {showGoals && (
+        <GoalsModal
+          goals={goals}
+          onSave={saveGoals}
+          onClose={() => setShowGoals(false)}
+        />
+      )}
     </div>
   )
 }

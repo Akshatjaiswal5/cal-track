@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const CAL_GOAL = 2200
-const PROTEIN_GOAL = 150
 
 const MEAL_META = {
   morning: { icon: '🌅', label: 'Morning' },
@@ -52,28 +50,30 @@ function getMonthDates(offset = 0) {
   return { days, year, month }
 }
 
-function calBg(cals) {
+function calBg(cals, goal) {
   if (!cals) return 'bg-gray-50'
-  if (cals < CAL_GOAL * 0.82) return 'bg-green-100'
-  if (cals < CAL_GOAL) return 'bg-yellow-100'
+  if (cals < goal * 0.82) return 'bg-green-100'
+  if (cals < goal) return 'bg-yellow-100'
   return 'bg-red-100'
 }
 
-function calText(cals) {
+function calText(cals, goal) {
   if (!cals) return 'text-gray-300'
-  if (cals < CAL_GOAL * 0.82) return 'text-green-700'
-  if (cals < CAL_GOAL) return 'text-yellow-700'
+  if (cals < goal * 0.82) return 'text-green-700'
+  if (cals < goal) return 'text-yellow-700'
   return 'text-red-600'
 }
 
-function barColor(cals) {
+function barColor(cals, goal) {
   if (!cals) return 'bg-gray-200'
-  if (cals < CAL_GOAL * 0.82) return 'bg-green-400'
-  if (cals < CAL_GOAL) return 'bg-yellow-400'
+  if (cals < goal * 0.82) return 'bg-green-400'
+  if (cals < goal) return 'bg-yellow-400'
   return 'bg-red-400'
 }
 
-export default function WeeklyStats() {
+export default function WeeklyStats({ goals = { calories: 2200, protein: 150 } }) {
+  const CAL_GOAL = goals.calories
+  const PROTEIN_GOAL = goals.protein
   const [view, setView] = useState('week')
   const [weekOffset, setWeekOffset] = useState(0)
   const [monthOffset, setMonthOffset] = useState(0)
@@ -178,7 +178,7 @@ export default function WeeklyStats() {
                   </div>
                   <div className="flex-1 space-y-1">
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      {!isFuture && cals > 0 && <div className={`h-full rounded-full ${barColor(cals)}`} style={{ width: `${Math.min((cals / CAL_GOAL) * 100, 100)}%` }} />}
+                      {!isFuture && cals > 0 && <div className={`h-full rounded-full ${barColor(cals, CAL_GOAL)}`} style={{ width: `${Math.min((cals / CAL_GOAL) * 100, 100)}%` }} />}
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       {!isFuture && protein > 0 && <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min((protein / PROTEIN_GOAL) * 100, 100)}%` }} />}
@@ -187,7 +187,7 @@ export default function WeeklyStats() {
                   <div className="text-right shrink-0 w-20">
                     {!isFuture && cals > 0 ? (
                       <>
-                        <p className={`text-xs font-bold ${calText(cals)}`}>{cals} cal</p>
+                        <p className={`text-xs font-bold ${calText(cals, CAL_GOAL)}`}>{cals} cal</p>
                         {protein > 0 && <p className="text-[11px] font-semibold text-emerald-500">{protein}g P</p>}
                       </>
                     ) : (
@@ -299,22 +299,24 @@ export default function WeeklyStats() {
                   className={`w-full aspect-square rounded-xl flex flex-col items-center justify-center p-0.5 transition-all
                     ${isToday ? 'ring-2 ring-purple-500' : ''}
                     ${isFuture ? 'opacity-30' : ''}
-                    ${cals > 0 ? calBg(cals) : 'bg-gray-50'}
+                    ${cals > 0 ? calBg(cals, CAL_GOAL) : 'bg-gray-50'}
                     ${dayLogs.length > 0 && !isFuture ? 'hover:opacity-80 active:scale-95' : ''}
                   `}
                 >
-                  <span className={`text-[11px] font-bold leading-none mb-0.5 ${isToday ? 'text-purple-600' : cals > 0 ? calText(cals) : 'text-gray-400'}`}>
+                  <span className={`text-[11px] font-bold leading-none mb-0.5 ${isToday ? 'text-purple-600' : cals > 0 ? calText(cals, CAL_GOAL) : 'text-gray-400'}`}>
                     {date.getDate()}
                   </span>
                   {cals > 0 && (
-                    <span className={`text-[9px] font-semibold leading-none ${calText(cals)}`}>
+                    <span className={`text-[9px] font-semibold leading-none ${calText(cals, CAL_GOAL)}`}>
                       {cals >= 1000 ? `${(cals / 1000).toFixed(1)}k` : cals}
                     </span>
                   )}
-                  {protein > 0 && (
-                    <span className="text-[8px] font-semibold leading-none text-emerald-500">
-                      {protein}g
-                    </span>
+                  {/* Goal completion dots */}
+                  {cals > 0 && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${cals >= CAL_GOAL ? 'bg-purple-500' : 'bg-gray-300'}`} title="Calorie goal" />
+                      <div className={`w-1.5 h-1.5 rounded-full ${protein >= PROTEIN_GOAL ? 'bg-emerald-500' : 'bg-gray-300'}`} title="Protein goal" />
+                    </div>
                   )}
                 </button>
 
@@ -360,14 +362,31 @@ export default function WeeklyStats() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 mt-4 px-1">
-          <span className="text-[10px] text-gray-400">Color:</span>
-          {[['bg-green-100', 'Under goal'], ['bg-yellow-100', 'Near goal'], ['bg-red-100', 'Over goal']].map(([bg, label]) => (
-            <div key={label} className="flex items-center gap-1">
-              <div className={`w-3 h-3 rounded-sm ${bg}`} />
-              <span className="text-[10px] text-gray-400">{label}</span>
+        <div className="mt-4 px-1 space-y-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[10px] text-gray-400 font-medium">Calories:</span>
+            {[['bg-green-100', 'Under'], ['bg-yellow-100', 'Near'], ['bg-red-100', 'Over']].map(([bg, label]) => (
+              <div key={label} className="flex items-center gap-1">
+                <div className={`w-3 h-3 rounded-sm ${bg}`} />
+                <span className="text-[10px] text-gray-400">{label} goal</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-gray-400 font-medium">Dots:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <span className="text-[10px] text-gray-400">Cal goal met</span>
             </div>
-          ))}
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-[10px] text-gray-400">Protein goal met</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <span className="text-[10px] text-gray-400">Not met</span>
+            </div>
+          </div>
         </div>
       </>
     )
