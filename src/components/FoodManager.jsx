@@ -17,7 +17,8 @@ export default function FoodManager() {
     name: '',
     min_calories: '',
     max_calories: '',
-    subtypes: [],
+    min_protein: '',
+    max_protein: '',
   })
   const [subtypeRows, setSubtypeRows] = useState([
     { threshold: 0.33, label: '' },
@@ -35,8 +36,7 @@ export default function FoodManager() {
 
   function handleNameBlur() {
     if (form.name && subtypeRows.every((r) => !r.label)) {
-      const defaults = DEFAULT_SUBTYPES(form.name)
-      setSubtypeRows(defaults)
+      setSubtypeRows(DEFAULT_SUBTYPES(form.name))
     }
   }
 
@@ -50,11 +50,13 @@ export default function FoodManager() {
       name: form.name.trim(),
       min_calories: parseInt(form.min_calories),
       max_calories: parseInt(form.max_calories),
+      min_protein: parseInt(form.min_protein) || 0,
+      max_protein: parseInt(form.max_protein) || 0,
       subtypes,
     })
     setSaving(false)
     if (!error) {
-      setForm({ name: '', min_calories: '', max_calories: '', subtypes: [] })
+      setForm({ name: '', min_calories: '', max_calories: '', min_protein: '', max_protein: '' })
       setSubtypeRows([{ threshold: 0.33, label: '' }, { threshold: 0.66, label: '' }, { threshold: 1.0, label: '' }])
       setShowForm(false)
       fetchFoods()
@@ -117,6 +119,29 @@ export default function FoodManager() {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Min protein (g)</label>
+              <input
+                type="number"
+                placeholder="e.g. 2"
+                value={form.min_protein}
+                onChange={(e) => setForm({ ...form, min_protein: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-400 bg-white"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Max protein (g)</label>
+              <input
+                type="number"
+                placeholder="e.g. 4"
+                value={form.max_protein}
+                onChange={(e) => setForm({ ...form, max_protein: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-400 bg-white"
+              />
+            </div>
+          </div>
+
           {/* Subtypes */}
           <div>
             <label className="text-xs text-gray-500 mb-2 block">Subtypes (by richness)</label>
@@ -172,7 +197,12 @@ export default function FoodManager() {
             >
               <div>
                 <p className="text-sm font-semibold text-gray-800">{food.name}</p>
-                <p className="text-xs text-gray-400">{food.min_calories}–{food.max_calories} cal each</p>
+                <p className="text-xs text-gray-400">
+                  {food.min_calories}–{food.max_calories} cal
+                  {(food.min_protein > 0 || food.max_protein > 0) && (
+                    <> · {food.min_protein}–{food.max_protein}g protein</>
+                  )}
+                </p>
                 {food.subtypes && food.subtypes.length > 0 && (
                   <div className="flex gap-1.5 mt-1.5 flex-wrap">
                     {food.subtypes.map((st, i) => (

@@ -5,6 +5,8 @@ create table if not exists food_items (
   name text not null,
   min_calories int not null,
   max_calories int not null,
+  min_protein int not null default 0,
+  max_protein int not null default 0,
   subtypes jsonb default '[]',
   created_at timestamptz default now()
 );
@@ -15,10 +17,16 @@ create table if not exists food_logs (
   food_name text not null,
   quantity numeric not null default 1,
   calories int not null,
+  protein int not null default 0,
   subtype text,
   meal_type text check (meal_type in ('morning', 'afternoon', 'dinner')),
   logged_at timestamptz default now()
 );
+
+-- ── If tables already exist, run these migrations instead ──
+-- alter table food_items add column if not exists min_protein int not null default 0;
+-- alter table food_items add column if not exists max_protein int not null default 0;
+-- alter table food_logs add column if not exists protein int not null default 0;
 
 -- Enable Row Level Security (optional - for personal use, you can disable or keep open)
 alter table food_items enable row level security;

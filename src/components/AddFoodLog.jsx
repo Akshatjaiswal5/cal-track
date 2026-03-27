@@ -45,6 +45,10 @@ export default function AddFoodLog({ onClose, onAdded }) {
     ? lerp(selected.min_calories, selected.max_calories, richness) * quantity
     : 0
 
+  const protein = selected
+    ? lerp(selected.min_protein ?? 0, selected.max_protein ?? 0, richness) * quantity
+    : 0
+
   const subtype = selected ? getSubtype(selected, richness) : ''
 
   async function handleSave() {
@@ -55,6 +59,7 @@ export default function AddFoodLog({ onClose, onAdded }) {
       food_name: selected.name,
       quantity,
       calories,
+      protein,
       subtype,
       meal_type: getMealType(),
       logged_at: new Date().toISOString(),
@@ -65,6 +70,8 @@ export default function AddFoodLog({ onClose, onAdded }) {
       onClose()
     }
   }
+
+  const mealType = getMealType()
 
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
@@ -86,10 +93,10 @@ export default function AddFoodLog({ onClose, onAdded }) {
         {/* Meal tag */}
         <div className="px-5 mb-3">
           <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
-            {getMealType() === 'morning' && '🌅'}
-            {getMealType() === 'afternoon' && '☀️'}
-            {getMealType() === 'dinner' && '🌙'}
-            {getMealType().charAt(0).toUpperCase() + getMealType().slice(1)}
+            {mealType === 'morning' && '🌅'}
+            {mealType === 'afternoon' && '☀️'}
+            {mealType === 'dinner' && '🌙'}
+            {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
           </span>
         </div>
 
@@ -120,25 +127,37 @@ export default function AddFoodLog({ onClose, onAdded }) {
               }`}
             >
               <span className="font-medium text-gray-800 text-sm">{food.name}</span>
-              <span className="text-xs text-gray-400">{food.min_calories}–{food.max_calories} cal</span>
+              <div className="text-right">
+                <p className="text-xs text-gray-400">{food.min_calories}–{food.max_calories} cal</p>
+                {(food.min_protein > 0 || food.max_protein > 0) && (
+                  <p className="text-xs text-emerald-500">{food.min_protein}–{food.max_protein}g P</p>
+                )}
+              </div>
             </button>
           ))}
         </div>
 
-        {/* Sliders (shown when food selected) */}
+        {/* Sliders */}
         {selected && (
-          <div className="px-5 pt-4 pb-2 border-t border-gray-100 space-y-5">
-            {/* Calorie preview */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-purple-600">{calories} cal</p>
-                <p className="text-xs text-gray-500 mt-0.5">{subtype}</p>
+          <div className="px-5 pt-4 pb-2 border-t border-gray-100 space-y-4">
+            {/* Stats preview */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-purple-50 rounded-xl px-4 py-3">
+                <p className="text-2xl font-bold text-purple-600">{calories}</p>
+                <p className="text-xs text-purple-400">calories</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-gray-700">×{quantity}</p>
+              {(selected.min_protein > 0 || selected.max_protein > 0) && (
+                <div className="flex-1 bg-emerald-50 rounded-xl px-4 py-3">
+                  <p className="text-2xl font-bold text-emerald-600">{protein}g</p>
+                  <p className="text-xs text-emerald-400">protein</p>
+                </div>
+              )}
+              <div className="bg-gray-50 rounded-xl px-4 py-3">
+                <p className="text-lg font-bold text-gray-600">×{quantity}</p>
                 <p className="text-xs text-gray-400">qty</p>
               </div>
             </div>
+            <p className="text-xs text-center text-gray-400 -mt-2">{subtype}</p>
 
             {/* Quantity slider */}
             <div>

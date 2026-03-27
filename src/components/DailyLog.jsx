@@ -3,10 +3,13 @@ import { supabase } from '../supabase'
 import AddFoodLog from './AddFoodLog'
 
 const MEAL_META = {
-  morning: { label: 'Morning', icon: '🌅', color: 'text-amber-500', bg: 'bg-amber-50' },
-  afternoon: { label: 'Afternoon', icon: '☀️', color: 'text-orange-500', bg: 'bg-orange-50' },
-  dinner: { label: 'Dinner', icon: '🌙', color: 'text-indigo-500', bg: 'bg-indigo-50' },
+  morning: { label: 'Morning', icon: '🌅', bg: 'bg-amber-50' },
+  afternoon: { label: 'Afternoon', icon: '☀️', bg: 'bg-orange-50' },
+  dinner: { label: 'Dinner', icon: '🌙', bg: 'bg-indigo-50' },
 }
+
+const CAL_GOAL = 2200
+const PROTEIN_GOAL = 150
 
 export default function DailyLog() {
   const [logs, setLogs] = useState([])
@@ -40,6 +43,7 @@ export default function DailyLog() {
   }, {})
 
   const totalCals = logs.reduce((sum, l) => sum + (l.calories || 0), 0)
+  const totalProtein = logs.reduce((sum, l) => sum + (l.protein || 0), 0)
 
   async function deleteLog(id) {
     setDeletingId(id)
@@ -48,28 +52,43 @@ export default function DailyLog() {
     setDeletingId(null)
   }
 
-  const calColor =
-    totalCals < 1800 ? 'text-green-600' : totalCals < 2200 ? 'text-yellow-600' : 'text-red-500'
-
   return (
     <div className="flex flex-col h-full">
-      {/* Daily total */}
+      {/* Daily summary card */}
       <div className="px-5 pt-5 pb-4">
         <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-5 text-white shadow-lg shadow-purple-200">
-          <p className="text-purple-200 text-sm font-medium mb-1">
+          <p className="text-purple-200 text-sm font-medium mb-3">
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
-          <div className="flex items-end gap-2">
-            <span className="text-4xl font-bold">{totalCals}</span>
-            <span className="text-purple-300 text-sm mb-1">calories today</span>
+
+          {/* Calories */}
+          <div className="mb-3">
+            <div className="flex items-end gap-2 mb-1.5">
+              <span className="text-4xl font-bold">{totalCals}</span>
+              <span className="text-purple-300 text-sm mb-1">/ {CAL_GOAL} cal</span>
+            </div>
+            <div className="h-2 bg-purple-500 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-white rounded-full transition-all duration-500"
+                style={{ width: `${Math.min((totalCals / CAL_GOAL) * 100, 100)}%` }}
+              />
+            </div>
+            <p className="text-purple-300 text-xs mt-1">{Math.max(0, CAL_GOAL - totalCals)} cal remaining</p>
           </div>
-          <div className="mt-3 h-2 bg-purple-500 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all duration-500"
-              style={{ width: `${Math.min((totalCals / 2200) * 100, 100)}%` }}
-            />
+
+          {/* Protein */}
+          <div className="bg-white/10 rounded-xl px-4 py-2.5 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-purple-200">Protein</p>
+              <p className="text-lg font-bold">{totalProtein}g <span className="text-purple-300 text-sm font-normal">/ {PROTEIN_GOAL}g</span></p>
+            </div>
+            <div className="w-24 h-2 bg-purple-500 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-400 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min((totalProtein / PROTEIN_GOAL) * 100, 100)}%` }}
+              />
+            </div>
           </div>
-          <p className="text-purple-300 text-xs mt-1.5">{Math.max(0, 2200 - totalCals)} cal remaining (goal: 2200)</p>
         </div>
       </div>
 
@@ -91,6 +110,7 @@ export default function DailyLog() {
             if (!items || items.length === 0) return null
             const meta = MEAL_META[mealType]
             const mealCals = items.reduce((s, l) => s + (l.calories || 0), 0)
+            const mealProtein = items.reduce((s, l) => s + (l.protein || 0), 0)
             return (
               <div key={mealType}>
                 <div className="flex items-center justify-between mb-2">
@@ -100,7 +120,10 @@ export default function DailyLog() {
                     </span>
                     <span className="text-sm font-semibold text-gray-700">{meta.label}</span>
                   </div>
-                  <span className="text-xs text-gray-400 font-medium">{mealCals} cal</span>
+                  <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                    <span>{mealCals} cal</span>
+                    {mealProtein > 0 && <span className="text-emerald-500">{mealProtein}g P</span>}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {items.map((log) => (
@@ -114,8 +137,11 @@ export default function DailyLog() {
                           {log.food_name} · ×{log.quantity} · {new Date(log.logged_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 ml-3">
-                        <span className="text-sm font-bold text-purple-600">{log.calories}</span>
+                      <div className="flex items-center gap-2 ml-3">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-purple-600">{log.calories}</p>
+                          {log.protein > 0 && <p className="text-xs font-semibold text-emerald-500">{log.protein}g</p>}
+                        </div>
                         <button
                           onClick={() => deleteLog(log.id)}
                           disabled={deletingId === log.id}
