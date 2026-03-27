@@ -23,14 +23,14 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
         {activeTab === 'today' && <DailyLog />}
         {activeTab === 'foods' && <FoodManager />}
         {activeTab === 'week' && <WeeklyStats />}
       </main>
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-100 flex">
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-100 flex" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
