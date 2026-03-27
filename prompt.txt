@@ -1,0 +1,12 @@
+Create a webapp for tracking what i am eating, it should be very simple, i will have:
+items (it should have a name, there should be a range of calories, for example a roti may have between 60 to 100 calories
+i will have a slider to decide how many it have, if i have more calorie the subtype changes to oily roti, to small roti,
+)
+i should be able to add food any time easily, it will auto organise them in morning, afternoon and dinner
+it should be saving data in supabase and deploy on netlify
+create a good icon for it as i will save it in iphone homescreen
+
+it should have a calender type weekly stats
+
+
+first create a plan and then show me and then implement
