@@ -1,23 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabase'
 
 const DEFAULTS = { calories: 2200, protein: 150 }
-const KEY = 'caltrack_goals'
-
-function load() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY))
-    return saved ? { ...DEFAULTS, ...saved } : DEFAULTS
-  } catch {
-    return DEFAULTS
-  }
-}
 
 export function useGoals() {
-  const [goals, setGoals] = useState(load)
+  const [goals, setGoals] = useState(DEFAULTS)
 
-  function saveGoals(next) {
+  useEffect(() => {
+    supabase
+      .from('user_settings')
+      .select('cal_goal, protein_goal')
+      .eq('id', 'default')
+      .single()
+      .then(({ data }) => {
+        if (data) setGoals({ calories: data.cal_goal, protein: data.protein_goal })
+      })
+  }, [])
+
+  async function saveGoals(next) {
     setGoals(next)
-    localStorage.setItem(KEY, JSON.stringify(next))
+    await supabase.from('user_settings').upsert({
+      id: 'default',
+      cal_goal: next.calories,
+      protein_goal: next.protein,
+    })
   }
 
   return { goals, saveGoals }

@@ -1,5 +1,19 @@
 -- Run this in Supabase SQL Editor to set up your tables
 
+create table if not exists user_settings (
+  id text primary key,
+  cal_goal int not null default 2200,
+  protein_goal int not null default 150
+);
+
+alter table user_settings enable row level security;
+create policy "Allow all on user_settings" on user_settings for all using (true) with check (true);
+
+-- Seed default goals
+insert into user_settings (id, cal_goal, protein_goal)
+values ('default', 2200, 150)
+on conflict do nothing;
+
 create table if not exists food_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
